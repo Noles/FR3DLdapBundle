@@ -20,7 +20,7 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder();
-        $rootNode    = $treeBuilder->root('fr3d_ldap');
+        $rootNode = $treeBuilder->root('fr3d_ldap');
 
         $rootNode
             ->children()
@@ -50,43 +50,16 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('filter')->defaultValue('')->end()
                         ->scalarNode('usernameAttribute')->defaultValue('uid')->end()
                         ->arrayNode('attributes')
-                            ->defaultValue(array(
-                                array(
-                                    'ldap_attr'   => 'uid',
+                            ->defaultValue([
+                                [
+                                    'ldap_attr' => 'uid',
                                     'user_method' => 'setUsername',
-                                ),
-                            ))
+                                ],
+                            ])
                             ->prototype('array')
                                 ->children()
                                     ->scalarNode('ldap_attr')->isRequired()->cannotBeEmpty()->end()
                                     ->scalarNode('user_method')->isRequired()->cannotBeEmpty()->end()
-                                ->end()
-                            ->end()
-                        ->end()
-                        ->arrayNode('role')
-                            ->validate()
-                                ->ifTrue(function ($v) { return !empty($v['memberOf']) && !empty($v['search']); })
-                                ->thenInvalid('Only either memberOf or search mode can be set')
-                            ->end()
-                            ->children()
-                                ->arrayNode('memberOf')
-                                    ->children()
-                                        ->scalarNode('dnSuffixFilter')->isRequired()->cannotBeEmpty()->end()
-                                    ->end()
-                                ->end()
-                                ->arrayNode('search')
-                                    ->children()
-                                        ->scalarNode('baseDn')->isRequired()->cannotBeEmpty()->end()
-                                        ->scalarNode('filter')->end()
-                                        ->scalarNode('nameAttribute')->defaultValue('cn')->end()
-                                        ->scalarNode('userDnAttribute')->defaultValue('member')->end()
-                                        ->scalarNode('userId')->defaultValue('dn')
-                                            ->validate()
-                                                ->ifNotInArray(array('dn', 'username'))
-                                                ->thenInvalid('Only dn or username')
-                                            ->end()
-                                        ->end()
-                                    ->end()
                                 ->end()
                             ->end()
                         ->end()

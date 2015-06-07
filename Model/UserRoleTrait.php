@@ -4,10 +4,11 @@ namespace FR3D\LdapBundle\Model;
 
 /**
  * UserRoleTrait provides methods for roles.
+ *
+ * @property array $roles
  */
 trait UserRoleTrait
 {
-
     /**
      * Adds a role to the user.
      *
@@ -39,7 +40,9 @@ trait UserRoleTrait
         $roles = $this->roles;
 
         // we need to make sure to have at least one role
-        $roles[] = static::ROLE_DEFAULT;
+        if (empty($roles)) {
+            $roles[] = static::ROLE_DEFAULT;
+        }
 
         return array_unique($roles);
     }
@@ -54,7 +57,7 @@ trait UserRoleTrait
      */
     public function setRoles(array $roles)
     {
-        $this->roles = array();
+        $this->roles = [];
 
         foreach ($roles as $role) {
             $this->addRole($role);

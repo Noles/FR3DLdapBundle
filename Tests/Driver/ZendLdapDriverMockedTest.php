@@ -4,6 +4,7 @@ namespace FR3D\LdapBundle\Tests\Driver;
 
 use FR3D\LdapBundle\Driver\ZendLdapDriver;
 use FR3D\LdapBundle\Model\LdapUser;
+use FR3D\Psr3MessagesAssertions\PhpUnit\TestLogger;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Zend\Ldap\Exception\LdapException as ZendLdapException;
 use Zend\Ldap\Ldap;
@@ -35,37 +36,37 @@ class ZendLdapDriverMockedTest extends \PHPUnit_Framework_TestCase
 
         $this->zend = $this->getMockBuilder('Zend\Ldap\Ldap')
                 ->getMock();
-        $this->zendLdapDriver = new ZendLdapDriver($this->zend);
+        $this->zendLdapDriver = new ZendLdapDriver($this->zend, new TestLogger());
     }
 
     public function testSearch()
     {
-        $baseDn     = 'ou=example,dc=org';
-        $filter     = '(&(uid=test_username))';
-        $attributes = array('uid');
+        $baseDn = 'ou=example,dc=org';
+        $filter = '(&(uid=test_username))';
+        $attributes = ['uid'];
 
-        $entry = array(
-            'dn'  => 'uid=test_username,ou=example,dc=org',
-            'uid' => array('test_username'),
-        );
-        $expect = array(
+        $entry = [
+            'dn' => 'uid=test_username,ou=example,dc=org',
+            'uid' => ['test_username'],
+        ];
+        $expect = [
             'count' => 1,
             $entry,
-        );
+        ];
 
         $this->zend->expects($this->once())
                 ->method('searchEntries')
                 ->with($this->equalTo($filter), $this->equalTo($baseDn), $this->equalTo(Ldap::SEARCH_SCOPE_SUB), $this->equalTo($attributes))
-                ->will($this->returnValue(array($entry)));
+                ->will($this->returnValue([$entry]));
 
-        $this->assertEquals($expect, $this->zendLdapDriver->search($baseDn, $filter, $attributes));
+        self::assertEquals($expect, $this->zendLdapDriver->search($baseDn, $filter, $attributes));
     }
 
     public function testBindByUsernameSuccessful()
     {
         $username = 'test_username';
         $password = 'password';
-        $user     = new LdapUser();
+        $user = new LdapUser();
         $user->setUsername($username);
 
         $this->zend->expects($this->once())
@@ -73,14 +74,14 @@ class ZendLdapDriverMockedTest extends \PHPUnit_Framework_TestCase
                 ->with($this->equalTo($username), $this->equalTo($password))
                 ->will($this->returnValue($this->zend));
 
-        $this->assertTrue($this->zendLdapDriver->bind($user, $password));
+        self::assertTrue($this->zendLdapDriver->bind($user, $password));
     }
 
     public function testBindByUsernameBadPassword()
     {
         $username = 'test_username';
         $password = 'bad_password';
-        $user     = new LdapUser();
+        $user = new LdapUser();
         $user->setUsername($username);
 
         $this->zend->expects($this->once())
@@ -88,14 +89,14 @@ class ZendLdapDriverMockedTest extends \PHPUnit_Framework_TestCase
                 ->with($this->equalTo($username), $this->equalTo($password))
                 ->will($this->throwException(new ZendLdapException($this->zend)));
 
-        $this->assertFalse($this->zendLdapDriver->bind($user, $password));
+        self::assertFalse($this->zendLdapDriver->bind($user, $password));
     }
 
     public function testBindByUsernameBadUsername()
     {
         $username = 'bad_username';
         $password = 'bad_password';
-        $user     = new LdapUser();
+        $user = new LdapUser();
         $user->setUsername($username);
 
         $this->zend->expects($this->once())
@@ -103,14 +104,14 @@ class ZendLdapDriverMockedTest extends \PHPUnit_Framework_TestCase
                 ->with($this->equalTo($username), $this->equalTo($password))
                 ->will($this->throwException(new ZendLdapException($this->zend)));
 
-        $this->assertFalse($this->zendLdapDriver->bind($user, $password));
+        self::assertFalse($this->zendLdapDriver->bind($user, $password));
     }
 
     public function testBindByDnSuccessful()
     {
-        $dn       = 'uid=test_username,ou=example,dc=com';
+        $dn = 'uid=test_username,ou=example,dc=com';
         $password = 'password';
-        $user     = new LdapUser();
+        $user = new LdapUser();
         $user->setDn($dn);
 
         $this->zend->expects($this->once())
@@ -118,14 +119,14 @@ class ZendLdapDriverMockedTest extends \PHPUnit_Framework_TestCase
                 ->with($this->equalTo($dn), $this->equalTo($password))
                 ->will($this->returnValue($this->zend));
 
-        $this->assertTrue($this->zendLdapDriver->bind($user, $password));
+        self::assertTrue($this->zendLdapDriver->bind($user, $password));
     }
 
     public function testBindByDnBadPassword()
     {
-        $dn       = 'uid=test_username,ou=example,dc=com';
+        $dn = 'uid=test_username,ou=example,dc=com';
         $password = 'bad_password';
-        $user     = new LdapUser();
+        $user = new LdapUser();
         $user->setDn($dn);
 
         $this->zend->expects($this->once())
@@ -133,7 +134,7 @@ class ZendLdapDriverMockedTest extends \PHPUnit_Framework_TestCase
                 ->with($this->equalTo($dn), $this->equalTo($password))
                 ->will($this->throwException(new ZendLdapException($this->zend)));
 
-        $this->assertFalse($this->zendLdapDriver->bind($user, $password));
+        self::assertFalse($this->zendLdapDriver->bind($user, $password));
     }
 
     public function testBindUserInterfaceByUsernameSuccessful()
@@ -141,7 +142,7 @@ class ZendLdapDriverMockedTest extends \PHPUnit_Framework_TestCase
         $username = 'username';
         $password = 'password';
         /** @var UserInterface|\PHPUnit_Framework_MockObject_MockObject $user */
-        $user     = $this->getMock('Symfony\Component\Security\Core\User\UserInterface');
+        $user = $this->getMock('Symfony\Component\Security\Core\User\UserInterface');
 
         $user->expects($this->once())
                 ->method('getUsername')
@@ -152,6 +153,6 @@ class ZendLdapDriverMockedTest extends \PHPUnit_Framework_TestCase
                 ->with($this->equalTo($username), $this->equalTo($password))
                 ->will($this->returnValue($this->zend));
 
-        $this->assertTrue($this->zendLdapDriver->bind($user, $password));
+        self::assertTrue($this->zendLdapDriver->bind($user, $password));
     }
 }
